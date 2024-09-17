@@ -23,7 +23,7 @@ const Cart = () => {
                   <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded" />
                   <div className="flex-1 ml-4">
                     <h3 className="text-lg font-semibold text-gray-800">{item.title}</h3>
-                    <div className="text-sm text-gray-600 mb-1">Price: ${item.price.toFixed(2)}</div>
+                    <div className="text-sm text-gray-600 mb-1">Price: ${parseFloat(item.price).toFixed(2)}</div>
                     <div className="flex items-center">
                       <button 
                         onClick={() => dispatch(changeQuantity({ id: item.id, amount: -1 }))}
