@@ -1,62 +1,68 @@
-import { createSlice } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
-// إنشاء thunk لجلب البيانات
-export const fetchProducts = () => async (dispatch) => {
-  dispatch(fetchProductsStart());
-  try {
-    const response = await axios.get('http://localhost:3333/api/productdata');
-    dispatch(fetchProductsSuccess(response.data));
-  } catch (error) {
-    dispatch(fetchProductsFailure(error.message));
+// إنشاء thunk لجلب البيانات باستخدام createAsyncThunk
+export const fetchProducts = createAsyncThunk(
+  "products/fetchProducts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("http://localhost:3333/api/productdata");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
-};
+);
 
-
-// إنشاء thunk لحذف المنتج
-export const deleteProduct = (id) => async (dispatch) => {
-  dispatch(deleteProductStart());
-  try {
-    await axios.delete(`http://localhost:3333/api/productdata/${id}`);
-    dispatch(deleteProductSuccess(id));
-  } catch (error) {
-    dispatch(deleteProductFailure(error.message));
+// إنشاء thunk لحذف المنتج باستخدام createAsyncThunk
+export const deleteProduct = createAsyncThunk(
+  "products/deleteProduct",
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`http://localhost:3333/api/productdata/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
   }
-};
+);
 
 // إنشاء slice لإدارة الحالة
 const productSlice = createSlice({
-  name: 'products',
+  name: "products",
   initialState: {
     items: [],
-    status: 'idle',
-    error: null
+    status: "idle",
+    error: null,
   },
-  reducers: {
-    fetchProductsStart(state) {
-      state.status = 'loading';
-    },
-    fetchProductsSuccess(state, action) {
-      state.status = 'succeeded';
-      state.items = action.payload;
-    },
-    fetchProductsFailure(state, action) {
-      state.status = 'failed';
-      state.error = action.payload;
-    },
-    deleteProductStart(state) {
-      state.status = 'loading';
-    },
-    deleteProductSuccess(state, action) {
-      state.status = 'succeeded';
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      // حالات جلب البيانات
+      .addCase(fetchProducts.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.items = action.payload;
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
 
-    },
-    deleteProductFailure(state, action) {
-      state.status = 'failed';
-      state.error = action.payload;
-    }
-  }
+      // حالات حذف المنتج
+      .addCase(deleteProduct.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.status = "succeeded";
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      });
+  },
 });
 
-export const { fetchProductsStart, fetchProductsSuccess, fetchProductsFailure, deleteProductStart, deleteProductSuccess, deleteProductFailure } = productSlice.actions;
 export default productSlice.reducer;
